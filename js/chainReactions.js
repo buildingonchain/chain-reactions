@@ -55,13 +55,6 @@ class ChainReaction {
             const result = await this.instance.sendSignedTransaction(preparedTx);
             console.log(`[${this.chainName}] Transaction sent:`, result);
 
-            // Wait for confirmation
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 2 seconds
-            
-            // Update balance after transaction
-            const newBalance = await this.getBalance(this.instance.getAddress());
-            console.log(`[${this.chainName}] New balance:`, newBalance, 'ETH');
-
             return {
                 hash: result.hash || result.transactionHash,
                 from: this.instance.getAddress(),

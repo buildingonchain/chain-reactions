@@ -144,10 +144,12 @@ class ChainReactionUI {
                     statusElement.className = 'status pending';
                     
                     const receipt = await reaction.sendTransaction(recipient, amount);
+                    console.log(`Transaction receipt for ${networkId}:`, receipt);
                     
                     // Store transaction hash
                     const networkName = networkElement.querySelector('h3').textContent;
                     const explorerUrl = this.getExplorerUrl(networkId, receipt.hash);
+                    console.log(`Explorer URL for ${networkName}:`, explorerUrl);
                     txHashes[networkName] = explorerUrl;
                     
                     // Update balance after transaction
