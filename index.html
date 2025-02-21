@@ -147,18 +147,7 @@
 
     <!-- Load dependencies -->
     <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="https://unpkg.com/@kynesys/demos-sdk/xm-websdk"></script>
-    <script src="https://unpkg.com/@kynesys/demos-sdk/websdk"></script>
-
-    <!-- Initialize SDK -->
-    <script>
-        // Import required modules
-        const { demos, DemosWebAuth, prepareXMScript, prepareXMPayload } = window;
-        
-        // Initialize demos instance
-        const demosInstance = demos.getInstance();
-        window.demosInstance = demosInstance;
-    </script>
+    <script src="dist/bundle.js"></script>
 
     <!-- Our app code -->
     <script src="js/chainReactions.js"></script>
