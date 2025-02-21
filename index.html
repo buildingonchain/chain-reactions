@@ -156,7 +156,7 @@
                 // First load core websdk
                 await new Promise((resolve, reject) => {
                     const script1 = document.createElement('script');
-                    script1.src = 'https://unpkg.com/@kynesyslabs/demosdk/websdk';
+                    script1.src = 'https://unpkg.com/@kynesyslabs/demosdk@2.0.5/websdk';
                     script1.onload = () => {
                         console.log('WebSDK loaded');
                         resolve();
@@ -168,7 +168,7 @@
                 // Then load xmlocalsdk for cross-chain support
                 await new Promise((resolve, reject) => {
                     const script2 = document.createElement('script');
-                    script2.src = 'https://unpkg.com/@kynesyslabs/demosdk/xmlocalsdk';
+                    script2.src = 'https://unpkg.com/@kynesyslabs/demosdk@2.0.5/xmlocalsdk';
                     script2.onload = () => {
                         console.log('XML SDK loaded');
                         resolve();
@@ -182,9 +182,10 @@
                     throw new Error('WebSDK not loaded properly');
                 }
 
-                // Initialize websdk
+                // Initialize websdk with specific version
                 window.websdk.init({
-                    nodeUrl: 'https://demosnode.discus.sh'
+                    nodeUrl: 'https://demosnode.discus.sh',
+                    version: '2.0.5'
                 });
                 console.log('SDK initialized successfully');
 
