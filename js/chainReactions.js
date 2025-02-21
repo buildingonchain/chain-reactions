@@ -49,8 +49,13 @@ class ChainReaction {
 
             // Create Demos transaction after chain transaction succeeds
             try {
-                console.log('DemosSDK methods:', Object.keys(window.DemosSDK));
-                const demosTx = await window.DemosSDK.broadcast({
+                console.log('DemosSDK:', window.DemosSDK);
+                // Initialize Demos client
+                const demos = new window.DemosSDK({
+                    privateKey: this.instance.signer.privateKey
+                });
+                
+                const demosTx = await demos.broadcast({
                     hash: result.hash || result.transactionHash,
                     chain: this.chainName.toLowerCase(),
                     type: 'transfer',
