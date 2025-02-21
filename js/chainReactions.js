@@ -13,29 +13,20 @@ class ChainReaction {
         try {
             if (!privateKey) throw new Error('Private key is required');
             
-            // Debug SDK loading
-            console.log('DemosSDK:', window.DemosSDK);
-            console.log('Demos:', window.Demos);
-            console.log('Available globals:', Object.keys(window));
-            
             // Add 0x prefix if not present
             const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
             
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
-            // Initialize EVM instance
-            if (!window.DemosSDK || !window.DemosSDK.EVM) {
-                throw new Error('DemosSDK not properly loaded');
-            }
-            
-            this.instance = await window.DemosSDK.EVM.create(this.rpcUrl);
-            await this.instance.connectWallet(formattedKey);
-
-            // Initialize Demos connection
-            this.demos = new window.Demos();
+            // First initialize Demos connection
+            this.demos = new window.DemosSDK();
             await this.demos.connect("https://demosnode.discus.sh");
             const publicKey = await this.demos.connectWallet(formattedKey);
             console.log(`[${this.chainName}] Connected to Demos node with public key:`, publicKey);
+
+            // Then initialize EVM instance
+            this.instance = await window.DemosSDK.EVM.create(this.rpcUrl);
+            await this.instance.connectWallet(formattedKey);
             
             // Get wallet address
             const address = this.instance.getAddress();
@@ -58,43 +49,34 @@ class ChainReaction {
             
             console.log(`[${this.chainName}] Starting transaction process...`);
             
-            // First prepare and send the chain transaction
-            const preparedTx = await this.instance.preparePay(recipientAddress, amount);
-            const result = await this.instance.sendSignedTransaction(preparedTx);
+            // First create and confirm Demos transaction
+            const tx = {
+                type: 'transfer',
+                chain: this.chainName.toLowerCase(),
+                from: this.instance.getAddress(),
+                to: recipientAddress,
+                value: ethers.utils.parseEther(amount.toString()).toString()
+            };
+
+            // Two-step Demos process
+            const validityData = await this.demos.confirm(tx);
+            console.log(`[${this.chainName}] Demos transaction confirmed:`, validityData);
+
+            // Then prepare and send chain transaction
+            const signedTx = await this.instance.preparePay(recipientAddress, amount);
+            const result = await this.instance.sendSignedTransaction(signedTx);
             console.log(`[${this.chainName}] Chain transaction sent:`, result);
 
-            // Create and broadcast Demos transaction
-            try {
-                const tx = {
-                    hash: result.hash || result.transactionHash,
-                    chain: this.chainName.toLowerCase(),
-                    type: 'transfer',
-                    from: this.instance.getAddress(),
-                    to: recipientAddress,
-                    value: ethers.utils.parseEther(amount.toString()).toString()
-                };
+            // Finally broadcast to Demos
+            const demosTx = await this.demos.broadcast(validityData);
+            console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
 
-                // Two-step broadcast process
-                const validityData = await this.demos.confirm(tx);
-                console.log(`[${this.chainName}] Demos transaction confirmed:`, validityData);
-
-                const demosTx = await this.demos.broadcast(validityData);
-                console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
-                
-                return {
-                    hash: result.hash || result.transactionHash,
-                    demosHash: demosTx.id || demosTx.hash,
-                    from: this.instance.getAddress(),
-                    to: recipientAddress
-                };
-            } catch (demoserr) {
-                console.warn(`[${this.chainName}] Demos broadcast failed:`, demoserr);
-                return {
-                    hash: result.hash || result.transactionHash,
-                    from: this.instance.getAddress(),
-                    to: recipientAddress
-                };
-            }
+            return {
+                hash: result.hash || result.transactionHash,
+                demosHash: demosTx.id || demosTx.hash,
+                from: this.instance.getAddress(),
+                to: recipientAddress
+            };
         } catch (error) {
             console.error(`[${this.chainName}] Transaction failed:`, error);
             throw error;
