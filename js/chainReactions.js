@@ -13,17 +13,26 @@ class ChainReaction {
         try {
             if (!privateKey) throw new Error('Private key is required');
             
+            // Debug SDK loading
+            console.log('DemosSDK:', window.DemosSDK);
+            console.log('Demos:', window.Demos);
+            console.log('Available globals:', Object.keys(window));
+            
             // Add 0x prefix if not present
             const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
             
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
             // Initialize EVM instance
+            if (!window.DemosSDK || !window.DemosSDK.EVM) {
+                throw new Error('DemosSDK not properly loaded');
+            }
+            
             this.instance = await window.DemosSDK.EVM.create(this.rpcUrl);
             await this.instance.connectWallet(formattedKey);
 
             // Initialize Demos connection
-            this.demos = new window.DemosSDK.Demos();
+            this.demos = new window.Demos();
             await this.demos.connect("https://demosnode.discus.sh");
             const publicKey = await this.demos.connectWallet(formattedKey);
             console.log(`[${this.chainName}] Connected to Demos node with public key:`, publicKey);
