@@ -154,12 +154,25 @@
     <script src="js/app.js"></script>
 
     <script>
-        // Initialize app and show warning
-        window.addEventListener('load', () => {
-            // Wait for ethers to be available
+        // Initialize app after SDK loads
+        window.addEventListener('load', async () => {
+            // Wait for dependencies to be available
             if (typeof ethers === 'undefined') {
                 console.error('Ethers.js failed to load');
                 alert('Failed to load required dependencies. Please refresh the page.');
+                return;
+            }
+
+            // Wait for SDK to be ready
+            let attempts = 0;
+            while (!window.DemosSDK && attempts < 10) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                attempts++;
+            }
+
+            if (!window.DemosSDK) {
+                console.error('DemosSDK failed to load');
+                alert('Failed to load DemosSDK. Please refresh the page.');
                 return;
             }
 
