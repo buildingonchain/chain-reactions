@@ -49,16 +49,20 @@ class ChainReaction {
 
             // Create Demos transaction after chain transaction succeeds
             try {
+                console.log('DemosSDK methods:', Object.keys(window.DemosSDK));
                 const demosTx = await window.DemosSDK.broadcast({
                     hash: result.hash || result.transactionHash,
                     chain: this.chainName.toLowerCase(),
-                    type: 'transfer'
+                    type: 'transfer',
+                    from: this.instance.getAddress(),
+                    to: recipientAddress,
+                    value: ethers.utils.parseEther(amount.toString()).toString()
                 });
                 console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
                 
                 return {
                     hash: result.hash || result.transactionHash,
-                    demosHash: demosTx.id,
+                    demosHash: demosTx.id || demosTx.hash,
                     from: this.instance.getAddress(),
                     to: recipientAddress
                 };
