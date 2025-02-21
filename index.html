@@ -147,7 +147,8 @@
 
     <!-- Load dependencies -->
     <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="https://unpkg.com/@kynesys/demos-sdk@latest/dist/demos.min.js"></script>
+    <script src="https://unpkg.com/@kynesys/demos-sdk/websdk"></script>
+    <script src="https://unpkg.com/@kynesys/demos-sdk/xm-websdk"></script>
 
     <!-- Our app code -->
     <script src="js/chainReactions.js"></script>
@@ -163,9 +164,9 @@
                 return;
             }
 
-            // Check for Demos SDK
-            if (typeof Demos === 'undefined') {
-                console.error('Demos SDK failed to load');
+            // Check for Demos SDK modules
+            if (!window.demos || !window.DemosWebAuth) {
+                console.error('Demos SDK modules failed to load');
                 alert('Failed to load Demos SDK. Please refresh the page.');
                 return;
             }

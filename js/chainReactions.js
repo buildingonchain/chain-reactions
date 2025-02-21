@@ -1,3 +1,6 @@
+// Import SDK modules
+const { demos, DemosWebAuth, prepareXMScript, prepareXMPayload } = window;
+
 class ChainReaction {
     constructor(rpcUrl, chainName) {
         if (!rpcUrl) throw new Error('RPC URL is required');
@@ -7,6 +10,7 @@ class ChainReaction {
         this.chainName = chainName;
         this.instance = null;
         this.demos = null;
+        this.identity = null;
     }
 
     async initialize(privateKey) {
@@ -23,13 +27,13 @@ class ChainReaction {
             await this.demos.connect("https://demosnode.discus.sh");
             
             // Create identity and connect wallet
-            const identity = DemosWebAuth.getInstance();
-            await identity.create();
-            await this.demos.connectWallet(identity.keypair.privateKey);
+            this.identity = DemosWebAuth.getInstance();
+            await this.identity.create();
+            await this.demos.connectWallet(this.identity.keypair.privateKey);
             console.log(`[${this.chainName}] Connected to Demos node`);
 
             // Then initialize EVM instance
-            this.instance = await Demos.EVM.create(this.rpcUrl);
+            this.instance = await window.EVM.create(this.rpcUrl);
             await this.instance.connectWallet(formattedKey);
             
             // Get wallet address
@@ -67,7 +71,7 @@ class ChainReaction {
             });
 
             // Prepare and confirm transaction
-            const tx = await prepareXMPayload(script, identity.keypair);
+            const tx = await prepareXMPayload(script, this.identity.keypair);
             const validityData = await this.demos.confirm(tx);
             
             // Send chain transaction
@@ -75,7 +79,7 @@ class ChainReaction {
             console.log(`[${this.chainName}] Chain transaction sent:`, result);
 
             // Finally broadcast to Demos
-            const demosTx = await this.demos.broadcast(validityData, identity.keypair);
+            const demosTx = await this.demos.broadcast(validityData, this.identity.keypair);
             console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
 
             return {
