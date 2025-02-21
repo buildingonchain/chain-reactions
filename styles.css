@@ -275,4 +275,24 @@ input.error {
         transform: scale(1);
         opacity: 1;
     }
+}
+
+.tx-links {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.tx-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+}
+
+.tx-links a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.tx-links a:hover {
+    text-decoration: underline;
 } 

@@ -122,8 +122,16 @@ class ChainReactionUI {
         this.sendButton.disabled = true;
         const fuseLine = document.querySelector('.fuse-line');
         const congratsMessage = document.getElementById('congratsMessage');
+        const txList = document.getElementById('txList');
         congratsMessage.style.display = 'none';
+        txList.innerHTML = ''; // Clear previous links
         fuseLine.classList.remove('burning');
+        
+        const txHashes = {
+            Ethereum: null,
+            Arbitrum: null,
+            Optimism: null
+        };
         
         try {
             // Execute transactions in sequence
@@ -136,6 +144,11 @@ class ChainReactionUI {
                     statusElement.className = 'status pending';
                     
                     const receipt = await reaction.sendTransaction(recipient, amount);
+                    
+                    // Store transaction hash
+                    const networkName = networkElement.querySelector('h3').textContent;
+                    const explorerUrl = this.getExplorerUrl(networkId, receipt.hash);
+                    txHashes[networkName] = explorerUrl;
                     
                     // Update balance after transaction
                     await reaction.updateBalance(receipt.from, networkId);
@@ -159,10 +172,27 @@ class ChainReactionUI {
                 .every(el => el.classList.contains('success'));
             
             if (allSuccess) {
+                // Add transaction links
+                Object.entries(txHashes).forEach(([network, url]) => {
+                    if (url) {
+                        const li = document.createElement('li');
+                        li.innerHTML = `${network}: <a href="${url}" target="_blank">View Transaction</a>`;
+                        txList.appendChild(li);
+                    }
+                });
                 congratsMessage.style.display = 'block';
             }
         } finally {
             this.sendButton.disabled = false;
         }
+    }
+
+    getExplorerUrl(networkId, txHash) {
+        const explorers = {
+            sepolia: 'https://sepolia.etherscan.io/tx/',
+            arbitrum: 'https://sepolia.arbiscan.io/tx/',
+            optimism: 'https://sepolia-optimism.etherscan.io/tx/'
+        };
+        return explorers[networkId] + txHash;
     }
 } 
