@@ -289,10 +289,11 @@ input.error {
 }
 
 .tx-links a {
-    color: var(--accent);
+    color: #6B8AFF;
     text-decoration: none;
 }
 
 .tx-links a:hover {
+    color: #89A3FF;
     text-decoration: underline;
 } 
