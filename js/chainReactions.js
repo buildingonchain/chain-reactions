@@ -19,13 +19,17 @@ class ChainReaction {
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
             // First initialize Demos connection
-            this.demos = new window.DemosSDK();
+            this.demos = demos.getInstance();
             await this.demos.connect("https://demosnode.discus.sh");
-            const publicKey = await this.demos.connectWallet(formattedKey);
-            console.log(`[${this.chainName}] Connected to Demos node with public key:`, publicKey);
+            
+            // Create identity and connect wallet
+            const identity = DemosWebAuth.getInstance();
+            await identity.create();
+            await this.demos.connectWallet(identity.keypair.privateKey);
+            console.log(`[${this.chainName}] Connected to Demos node`);
 
             // Then initialize EVM instance
-            this.instance = await window.DemosSDK.EVM.create(this.rpcUrl);
+            this.instance = await Demos.EVM.create(this.rpcUrl);
             await this.instance.connectWallet(formattedKey);
             
             // Get wallet address
@@ -49,26 +53,29 @@ class ChainReaction {
             
             console.log(`[${this.chainName}] Starting transaction process...`);
             
-            // First create and confirm Demos transaction
-            const tx = {
-                type: 'transfer',
-                chain: this.chainName.toLowerCase(),
-                from: this.instance.getAddress(),
-                to: recipientAddress,
-                value: ethers.utils.parseEther(amount.toString()).toString()
-            };
-
-            // Two-step Demos process
-            const validityData = await this.demos.confirm(tx);
-            console.log(`[${this.chainName}] Demos transaction confirmed:`, validityData);
-
-            // Then prepare and send chain transaction
+            // First prepare the chain transaction
             const signedTx = await this.instance.preparePay(recipientAddress, amount);
+            
+            // Create the script
+            const script = prepareXMScript({
+                chain: this.chainName.toLowerCase(),
+                signedPayloads: [signedTx],
+                type: 'pay',
+                params: {
+                    timestamp: Date.now()
+                }
+            });
+
+            // Prepare and confirm transaction
+            const tx = await prepareXMPayload(script, identity.keypair);
+            const validityData = await this.demos.confirm(tx);
+            
+            // Send chain transaction
             const result = await this.instance.sendSignedTransaction(signedTx);
             console.log(`[${this.chainName}] Chain transaction sent:`, result);
 
             // Finally broadcast to Demos
-            const demosTx = await this.demos.broadcast(validityData);
+            const demosTx = await this.demos.broadcast(validityData, identity.keypair);
             console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
 
             return {
