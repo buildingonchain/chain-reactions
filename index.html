@@ -147,10 +147,64 @@
 
     <!-- Load dependencies -->
     <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="dist/bundle.js"></script>
 
-    <!-- Our app code -->
-    <script src="js/chainReactions.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Load Demos SDK -->
+    <script>
+        // Load SDK modules in sequence
+        async function loadSDK() {
+            try {
+                // First load core websdk
+                await new Promise((resolve, reject) => {
+                    const script1 = document.createElement('script');
+                    script1.src = 'https://unpkg.com/@kynesyslabs/demosdk/websdk';
+                    script1.onload = () => {
+                        console.log('WebSDK loaded');
+                        resolve();
+                    };
+                    script1.onerror = reject;
+                    document.head.appendChild(script1);
+                });
+
+                // Then load xmlocalsdk for cross-chain support
+                await new Promise((resolve, reject) => {
+                    const script2 = document.createElement('script');
+                    script2.src = 'https://unpkg.com/@kynesyslabs/demosdk/xmlocalsdk';
+                    script2.onload = () => {
+                        console.log('XML SDK loaded');
+                        resolve();
+                    };
+                    script2.onerror = reject;
+                    document.head.appendChild(script2);
+                });
+
+                // Wait for SDK to be ready
+                if (!window.websdk) {
+                    throw new Error('WebSDK not loaded properly');
+                }
+
+                // Initialize websdk
+                window.websdk.init({
+                    nodeUrl: 'https://demosnode.discus.sh'
+                });
+                console.log('SDK initialized successfully');
+
+            } catch (error) {
+                console.error('Failed to load SDK:', error);
+                alert('Failed to load Demos SDK. Please refresh the page.');
+            }
+        }
+
+        // Load SDK before app code
+        loadSDK().then(() => {
+            // Load app code after SDK
+            const appScript = document.createElement('script');
+            appScript.src = 'js/chainReactions.js';
+            document.head.appendChild(appScript);
+
+            const uiScript = document.createElement('script');
+            uiScript.src = 'js/app.js';
+            document.head.appendChild(uiScript);
+        });
+    </script>
 </body>
 </html> 

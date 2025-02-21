@@ -7,7 +7,7 @@ class ChainReaction {
         this.rpcUrl = rpcUrl;
         this.chainName = chainName;
         this.instance = null;
-        this.demos = window.demosInstance;
+        this.demos = window.websdk.getInstance();
     }
 
     async initialize(privateKey) {
