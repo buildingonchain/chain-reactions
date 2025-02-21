@@ -1,0 +1,18 @@
+{
+  "name": "chain-reactions",
+  "version": "1.0.0",
+  "description": "Cross-chain transaction demo using demos SDK",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "serve": "http-server ./public -c-1",
+    "web": "http-server ./public -c-1"
+  },
+  "dependencies": {
+    "@kynesyslabs/demosdk": "^2.0.5",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
+    "http-server": "^14.1.1"
+  }
+}

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Chain Reactions - A tool for executing cross-chain transactions across Ethereum, Arbitrum, and Optimism networks">
+    <title>Chain Reactions</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container" role="main">
+        <header role="banner">
+            <h1><span aria-label="chain emoji">⛓️</span> Chain Reactions <span aria-label="dynamite emoji">🧨</span></h1>
+        </header>
+
+        <main>
+            <!-- Wallet Section -->
+            <section class="wallet-section" aria-labelledby="wallet-title">
+                <div class="card">
+                    <h2 id="wallet-title">Wallet</h2>
+                    <div class="input-group">
+                        <label for="privateKey">Private Key</label>
+                        <input type="password" 
+                               id="privateKey" 
+                               placeholder="Enter your private key"
+                               aria-describedby="pk-help"
+                               autocomplete="off">
+                        <span id="pk-help" class="sr-only">Enter your private key to connect your wallet. Never share this with anyone.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transaction Section -->
+            <section class="transaction-section" aria-labelledby="tx-title">
+                <div class="card">
+                    <h2 id="tx-title">Transaction Details</h2>
+                    <div class="input-group">
+                        <label for="recipient">Recipient Address</label>
+                        <input type="text" 
+                               id="recipient" 
+                               placeholder="0x..."
+                               aria-describedby="recipient-help">
+                        <span id="recipient-help" class="sr-only">Enter the Ethereum address where you want to send funds</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="amount">Amount (ETH)</label>
+                        <input type="number" 
+                               id="amount" 
+                               value="0.005" 
+                               step="0.001" 
+                               min="0.001"
+                               aria-describedby="amount-help">
+                        <span id="amount-help" class="sr-only">Enter the amount of ETH to send, minimum 0.001</span>
+                    </div>
+                    <button class="btn primary" 
+                            id="sendTransaction" 
+                            aria-label="Send transactions to all networks">
+                        Send Transactions
+                    </button>
+                </div>
+            </section>
+
+            <!-- Status Section -->
+            <section class="status-section" aria-labelledby="status-title">
+                <div class="card">
+                    <h2 id="status-title">Transaction Status</h2>
+                    <div class="network-status" role="region" aria-label="Network statuses">
+                        <div class="fuse-line" aria-hidden="true"></div>
+                        <div class="network" id="sepolia" role="status">
+                            <h3>Ethereum</h3>
+                            <div class="balance" aria-label="Ethereum balance">Balance: -- ETH</div>
+                            <div class="status" aria-label="Ethereum status">Ready</div>
+                        </div>
+                        <div class="network" id="arbitrum" role="status">
+                            <h3>Arbitrum</h3>
+                            <div class="balance" aria-label="Arbitrum balance">Balance: -- ETH</div>
+                            <div class="status" aria-label="Arbitrum status">Ready</div>
+                        </div>
+                        <div class="network" id="optimism" role="status">
+                            <h3>Optimism</h3>
+                            <div class="balance" aria-label="Optimism balance">Balance: -- ETH</div>
+                            <div class="status" aria-label="Optimism status">Ready</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="congratsMessage" class="card success-message" style="display: none;" role="alert">
+                    <h2>Chain Reaction Complete! <span aria-label="fire emoji">🔥</span></h2>
+                    <p>Congratulations! You've successfully created a cross-chain transaction cascade!</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add CSS for screen readers -->
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* High contrast mode support */
+        @media (forced-colors: active) {
+            .btn.primary {
+                background-color: ButtonText;
+                color: ButtonFace;
+            }
+            .status {
+                border: 1px solid ButtonText;
+            }
+        }
+
+        /* Reduced motion preference */
+        @media (prefers-reduced-motion: reduce) {
+            .fuse-line::before,
+            .success-message,
+            .network.boom::after {
+                animation: none;
+                transition: none;
+            }
+        }
+
+        /* Focus styles */
+        *:focus {
+            outline: 3px solid #4A90E2;
+            outline-offset: 2px;
+        }
+
+        /* Keyboard navigation */
+        *:focus-visible {
+            outline: 3px solid #4A90E2;
+            outline-offset: 2px;
+        }
+    </style>
+
+    <!-- Load dependencies -->
+    <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="js/demos-sdk.js"></script>
+
+    <!-- Our app code -->
+    <script src="js/chainReactions.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        // Initialize app and show warning
+        window.addEventListener('load', () => {
+            // Wait for ethers to be available
+            if (typeof ethers === 'undefined') {
+                console.error('Ethers.js failed to load');
+                alert('Failed to load required dependencies. Please refresh the page.');
+                return;
+            }
+
+            window.app = new ChainReactionUI();
+            
+            const warning = document.createElement('div');
+            warning.className = 'card warning';
+            warning.innerHTML = `
+                <h2>⚠️ Important Security Notice</h2>
+                <p>This application requires you to:</p>
+                <ul>
+                    <li>Get test ETH from these faucets:
+                        <ul>
+                            <li><a href="https://sepoliafaucet.com/" target="_blank">Ethereum (mainnet) Faucet</a></li>
+                            <li><a href="https://www.alchemy.com/faucets/arbitrum-sepolia" target="_blank">Arbitrum Sepolia Faucet</a></li>
+                            <li><a href="https://app.optimism.io/faucet" target="_blank">Optimism Sepolia Faucet</a></li>
+                        </ul>
+                    </li>
+                    <li>Never share your private keys or seed phrases</li>
+                </ul>
+                <p>Only use test networks and test funds. Never use real/mainnet assets.</p>
+            `;
+            document.querySelector('header').after(warning);
+        });
+    </script>
+</body>
+</html> 
