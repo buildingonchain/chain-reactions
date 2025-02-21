@@ -42,16 +42,35 @@ class ChainReaction {
             
             console.log(`[${this.chainName}] Starting transaction process...`);
             
-            // Just send chain transaction for now
+            // First prepare and send the chain transaction
             const preparedTx = await this.instance.preparePay(recipientAddress, amount);
             const result = await this.instance.sendSignedTransaction(preparedTx);
             console.log(`[${this.chainName}] Chain transaction sent:`, result);
 
-            return {
-                hash: result.hash || result.transactionHash,
-                from: this.instance.getAddress(),
-                to: recipientAddress
-            };
+            // Create Demos transaction after chain transaction succeeds
+            try {
+                const demosTx = await window.DemosSDK.broadcast({
+                    hash: result.hash || result.transactionHash,
+                    chain: this.chainName.toLowerCase(),
+                    type: 'transfer'
+                });
+                console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
+                
+                return {
+                    hash: result.hash || result.transactionHash,
+                    demosHash: demosTx.id,
+                    from: this.instance.getAddress(),
+                    to: recipientAddress
+                };
+            } catch (demoserr) {
+                console.warn(`[${this.chainName}] Demos broadcast failed:`, demoserr);
+                // Return chain tx info even if Demos fails
+                return {
+                    hash: result.hash || result.transactionHash,
+                    from: this.instance.getAddress(),
+                    to: recipientAddress
+                };
+            }
         } catch (error) {
             console.error(`[${this.chainName}] Transaction failed:`, error);
             throw error;
