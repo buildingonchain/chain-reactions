@@ -182,6 +182,14 @@ class ChainReactionUI {
                         txList.appendChild(li);
                     }
                 });
+                
+                // Add demos transaction link if available
+                if (receipt.demosHash) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `Demos: <a href="https://demos.sh/tx/${receipt.demosHash}" target="_blank">View Demos Transaction</a>`;
+                    txList.appendChild(li);
+                }
+                
                 congratsMessage.style.display = 'block';
             }
         } finally {
