@@ -1,4 +1,3 @@
-// Remove any SDK imports from here - we'll use the global instance
 class ChainReaction {
     constructor(rpcUrl, chainName) {
         if (!rpcUrl) throw new Error('RPC URL is required');
@@ -7,32 +6,29 @@ class ChainReaction {
         this.rpcUrl = rpcUrl;
         this.chainName = chainName;
         this.instance = null;
-        this.demos = window.websdk.getInstance();
     }
 
     async initialize(privateKey) {
         try {
             if (!privateKey) throw new Error('Private key is required');
-            if (!window.websdk) throw new Error('WebSDK not initialized');
             
             // Add 0x prefix if not present
             const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
             
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
-            // First connect to Demos node
-            await this.demos.connect();
-            await this.demos.connectWallet(formattedKey);
-            console.log(`[${this.chainName}] Connected to Demos node`);
-
-            // Then initialize EVM instance
-            this.instance = await window.xmlocalsdk.EVM.create(this.rpcUrl);
+            // Initialize SDK
+            this.instance = await window.DemosSDK.EVM.create(this.rpcUrl);
             await this.instance.connectWallet(formattedKey);
             
             // Get wallet address
             const address = this.instance.getAddress();
             console.log(`[${this.chainName}] Wallet initialized with address:`, address);
             
+            // Get and display initial balance
+            const balance = await this.getBalance(address);
+            console.log(`[${this.chainName}] Initial balance:`, balance, 'ETH');
+
             return address;
         } catch (error) {
             console.error(`[${this.chainName}] Initialization failed:`, error);
@@ -43,38 +39,24 @@ class ChainReaction {
     async sendTransaction(recipientAddress, amount) {
         try {
             if (!this.instance) throw new Error('Chain reaction not initialized');
-            if (!window.websdk) throw new Error('WebSDK not initialized');
-            
-            console.log(`[${this.chainName}] Starting transaction process...`);
-            
-            // First prepare the chain transaction
-            const signedTx = await this.instance.preparePay(recipientAddress, amount);
-            
-            // Create the cross-chain script
-            const script = window.xmlocalsdk.prepareScript({
-                chain: this.chainName.toLowerCase(),
-                signedPayloads: [signedTx],
-                type: 'pay',
-                params: {
-                    timestamp: Date.now()
-                }
+            if (!recipientAddress) throw new Error('Recipient address is required');
+            if (!amount) throw new Error('Amount is required');
+
+            console.log(`[${this.chainName}] Preparing transaction:`, {
+                to: recipientAddress,
+                amount: amount
             });
 
-            // Prepare and confirm transaction
-            const tx = await window.xmlocalsdk.preparePayload(script);
-            const validityData = await this.demos.confirm(tx);
-            
-            // Send chain transaction
-            const result = await this.instance.sendSignedTransaction(signedTx);
-            console.log(`[${this.chainName}] Chain transaction sent:`, result);
+            // First prepare the transaction
+            const preparedTx = await this.instance.preparePay(recipientAddress, amount);
+            console.log(`[${this.chainName}] Transaction prepared:`, preparedTx);
 
-            // Finally broadcast to Demos
-            const demosTx = await this.demos.broadcast(validityData);
-            console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
+            // Then send it
+            const result = await this.instance.sendSignedTransaction(preparedTx);
+            console.log(`[${this.chainName}] Transaction sent:`, result);
 
             return {
                 hash: result.hash || result.transactionHash,
-                demosHash: demosTx.id || demosTx.hash,
                 from: this.instance.getAddress(),
                 to: recipientAddress
             };

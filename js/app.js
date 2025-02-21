@@ -132,7 +132,6 @@ class ChainReactionUI {
             Arbitrum: null,
             Optimism: null
         };
-        let demosHash = null; // Add this to store the demos hash
         
         try {
             // Execute transactions in sequence
@@ -146,11 +145,6 @@ class ChainReactionUI {
                     
                     const receipt = await reaction.sendTransaction(recipient, amount);
                     console.log(`Transaction receipt for ${networkId}:`, receipt);
-                    
-                    // Store demos hash from first successful transaction
-                    if (receipt.demosHash && !demosHash) {
-                        demosHash = receipt.demosHash;
-                    }
                     
                     // Store transaction hash
                     const networkName = networkElement.querySelector('h3').textContent;
@@ -180,18 +174,7 @@ class ChainReactionUI {
                 .every(el => el.classList.contains('success'));
             
             if (allSuccess) {
-                console.log('Transaction successful, demos hash:', demosHash);
-                // Add demos transaction link first if available
-                if (demosHash) {
-                    console.log('Creating demos link with hash:', demosHash);
-                    const li = document.createElement('li');
-                    li.innerHTML = `Demos: <a href="https://explorer.demos.sh/tx/${demosHash}" target="_blank">View Demos Transaction</a>`;
-                    txList.appendChild(li);
-                } else {
-                    console.log('No demos hash available');
-                }
-                
-                // Then add individual chain transaction links
+                // Add transaction links
                 Object.entries(txHashes).forEach(([network, url]) => {
                     if (url) {
                         const li = document.createElement('li');
@@ -199,7 +182,6 @@ class ChainReactionUI {
                         txList.appendChild(li);
                     }
                 });
-                
                 congratsMessage.style.display = 'block';
             }
         } finally {
