@@ -150,33 +150,10 @@
 
     <!-- Load Demos SDK -->
     <script>
-        // Helper to check URL exists
-        async function checkUrl(url) {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return true;
-            } catch (error) {
-                console.error(`URL check failed for ${url}:`, error);
-                return false;
-            }
-        }
-
         // Load SDK modules in sequence
         async function loadSDK() {
             try {
-                const websdkUrl = 'https://unpkg.com/@kynesyslabs/demosdk@2.0.5/dist/websdk.js';
-                const xmlsdkUrl = 'https://unpkg.com/@kynesyslabs/demosdk@2.0.5/dist/xmlocalsdk.js';
-
-                // Check URLs first
-                console.log('Checking SDK URLs...');
-                const [webOk, xmlOk] = await Promise.all([
-                    checkUrl(websdkUrl),
-                    checkUrl(xmlsdkUrl)
-                ]);
-                console.log('URL check results:', { webOk, xmlOk });
+                const websdkUrl = 'https://unpkg.com/@kynesyslabs/demosdk@2.0.5/dist/index.js';
 
                 // First load core websdk
                 await new Promise((resolve, reject) => {
@@ -193,31 +170,14 @@
                     document.head.appendChild(script1);
                 });
 
-                // Then load xmlocalsdk for cross-chain support
-                await new Promise((resolve, reject) => {
-                    const script2 = document.createElement('script');
-                    script2.src = xmlsdkUrl;
-                    script2.onload = () => {
-                        console.log('XML SDK loaded');
-                        resolve();
-                    };
-                    script2.onerror = (err) => {
-                        console.error('Failed to load XML SDK:', err);
-                        reject(err);
-                    };
-                    document.head.appendChild(script2);
-                });
-
                 // Wait for SDK to be ready
-                if (!window.websdk) {
-                    throw new Error('WebSDK not loaded properly');
+                if (!window.DemosSDK) {
+                    throw new Error('DemosSDK not loaded properly');
                 }
 
-                // Initialize websdk with specific version
-                window.websdk.init({
-                    nodeUrl: 'https://demosnode.discus.sh',
-                    version: '2.0.5'
-                });
+                // Initialize SDK
+                window.websdk = new window.DemosSDK();
+                await window.websdk.connect('https://demosnode.discus.sh');
                 console.log('SDK initialized successfully');
 
             } catch (error) {
