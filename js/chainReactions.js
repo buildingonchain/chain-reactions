@@ -6,7 +6,6 @@ class ChainReaction {
         this.rpcUrl = rpcUrl;
         this.chainName = chainName;
         this.instance = null;
-        this.demos = null; // Add Demos instance
     }
 
     async initialize(privateKey) {
@@ -18,13 +17,7 @@ class ChainReaction {
             
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
-            // Initialize Demos SDK first
-            this.demos = new window.DemosSDK({
-                privateKey: formattedKey
-            });
-            console.log(`[${this.chainName}] Demos SDK initialized`);
-            
-            // Initialize EVM instance
+            // Initialize EVM instance only
             this.instance = await window.DemosSDK.EVM.create(this.rpcUrl);
             await this.instance.connectWallet(formattedKey);
             
@@ -45,12 +38,12 @@ class ChainReaction {
 
     async sendTransaction(recipientAddress, amount) {
         try {
-            if (!this.instance || !this.demos) throw new Error('Chain reaction not initialized');
+            if (!this.instance) throw new Error('Chain reaction not initialized');
             
             console.log(`[${this.chainName}] Starting transaction process...`);
             
-            // Create Demos transaction first
-            const demosTx = await this.demos.createTransaction({
+            // First create the Demos transaction
+            const demosTx = await window.DemosSDK.Transaction.create({
                 type: 'transfer',
                 chain: this.chainName.toLowerCase(),
                 from: this.instance.getAddress(),
@@ -59,14 +52,14 @@ class ChainReaction {
             });
             console.log(`[${this.chainName}] Demos transaction created:`, demosTx);
 
-            // Then send chain transaction
+            // Then prepare and send the chain transaction
             const preparedTx = await this.instance.preparePay(recipientAddress, amount);
             const result = await this.instance.sendSignedTransaction(preparedTx);
             console.log(`[${this.chainName}] Chain transaction sent:`, result);
 
             return {
                 hash: result.hash || result.transactionHash,
-                demosHash: demosTx.id, // Use demosTx.id for the hash
+                demosHash: demosTx.id,  // Keep this for the Demos link
                 from: this.instance.getAddress(),
                 to: recipientAddress
             };
