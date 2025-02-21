@@ -42,24 +42,13 @@ class ChainReaction {
             
             console.log(`[${this.chainName}] Starting transaction process...`);
             
-            // First create the Demos transaction
-            const demosTx = await window.DemosSDK.Transaction.create({
-                type: 'transfer',
-                chain: this.chainName.toLowerCase(),
-                from: this.instance.getAddress(),
-                to: recipientAddress,
-                value: ethers.utils.parseEther(amount.toString())
-            });
-            console.log(`[${this.chainName}] Demos transaction created:`, demosTx);
-
-            // Then prepare and send the chain transaction
+            // Just send chain transaction for now
             const preparedTx = await this.instance.preparePay(recipientAddress, amount);
             const result = await this.instance.sendSignedTransaction(preparedTx);
             console.log(`[${this.chainName}] Chain transaction sent:`, result);
 
             return {
                 hash: result.hash || result.transactionHash,
-                demosHash: demosTx.id,  // Keep this for the Demos link
                 from: this.instance.getAddress(),
                 to: recipientAddress
             };
