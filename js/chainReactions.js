@@ -10,7 +10,6 @@ class ChainReaction {
         this.chainName = chainName;
         this.instance = null;
         this.demos = null;
-        this.identity = null;
     }
 
     async initialize(privateKey) {
@@ -22,14 +21,10 @@ class ChainReaction {
             
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
-            // First initialize Demos connection
-            this.demos = demos.getInstance();
-            await this.demos.connect("https://demosnode.discus.sh");
-            
-            // Create identity and connect wallet
-            this.identity = DemosWebAuth.getInstance();
-            await this.identity.create();
-            await this.demos.connectWallet(this.identity.keypair.privateKey);
+            // First connect to Demos node
+            await demos.connect("https://demosnode.discus.sh");
+            await demos.connectWallet(formattedKey);
+            this.demos = demos;
             console.log(`[${this.chainName}] Connected to Demos node`);
 
             // Then initialize EVM instance
@@ -40,10 +35,6 @@ class ChainReaction {
             const address = this.instance.getAddress();
             console.log(`[${this.chainName}] Wallet initialized with address:`, address);
             
-            // Get and display initial balance
-            const balance = await this.getBalance(address);
-            console.log(`[${this.chainName}] Initial balance:`, balance, 'ETH');
-
             return address;
         } catch (error) {
             console.error(`[${this.chainName}] Initialization failed:`, error);
