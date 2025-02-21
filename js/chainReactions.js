@@ -7,12 +7,13 @@ class ChainReaction {
         this.rpcUrl = rpcUrl;
         this.chainName = chainName;
         this.instance = null;
+        this.demos = window.demosInstance;
     }
 
     async initialize(privateKey) {
         try {
             if (!privateKey) throw new Error('Private key is required');
-            if (!window.demosInstance) throw new Error('Demos SDK not initialized');
+            if (!window.websdk) throw new Error('WebSDK not initialized');
             
             // Add 0x prefix if not present
             const formattedKey = privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`;
@@ -20,12 +21,12 @@ class ChainReaction {
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
             // First connect to Demos node
-            await window.demosInstance.connect("https://demosnode.discus.sh");
-            await window.demosInstance.connectWallet(formattedKey);
+            await this.demos.connect();
+            await this.demos.connectWallet(formattedKey);
             console.log(`[${this.chainName}] Connected to Demos node`);
 
             // Then initialize EVM instance
-            this.instance = await window.EVM.create(this.rpcUrl);
+            this.instance = await window.xmlocalsdk.EVM.create(this.rpcUrl);
             await this.instance.connectWallet(formattedKey);
             
             // Get wallet address
@@ -42,15 +43,15 @@ class ChainReaction {
     async sendTransaction(recipientAddress, amount) {
         try {
             if (!this.instance) throw new Error('Chain reaction not initialized');
-            if (!window.demosInstance) throw new Error('Demos SDK not initialized');
+            if (!window.websdk) throw new Error('WebSDK not initialized');
             
             console.log(`[${this.chainName}] Starting transaction process...`);
             
             // First prepare the chain transaction
             const signedTx = await this.instance.preparePay(recipientAddress, amount);
             
-            // Create the script
-            const script = window.prepareXMScript({
+            // Create the cross-chain script
+            const script = window.xmlocalsdk.prepareScript({
                 chain: this.chainName.toLowerCase(),
                 signedPayloads: [signedTx],
                 type: 'pay',
@@ -60,15 +61,15 @@ class ChainReaction {
             });
 
             // Prepare and confirm transaction
-            const tx = await window.prepareXMPayload(script);
-            const validityData = await window.demosInstance.confirm(tx);
+            const tx = await window.xmlocalsdk.preparePayload(script);
+            const validityData = await this.demos.confirm(tx);
             
             // Send chain transaction
             const result = await this.instance.sendSignedTransaction(signedTx);
             console.log(`[${this.chainName}] Chain transaction sent:`, result);
 
             // Finally broadcast to Demos
-            const demosTx = await window.demosInstance.broadcast(validityData);
+            const demosTx = await this.demos.broadcast(validityData);
             console.log(`[${this.chainName}] Demos transaction broadcast:`, demosTx);
 
             return {
