@@ -9,7 +9,7 @@ class ChainReaction {
         this.rpcUrl = rpcUrl;
         this.chainName = chainName;
         this.instance = null;
-        this.demos = null;
+        this.demos = window.demosInstance;
     }
 
     async initialize(privateKey) {
@@ -22,9 +22,8 @@ class ChainReaction {
             console.log(`[${this.chainName}] Initializing with RPC:`, this.rpcUrl);
             
             // First connect to Demos node
-            await demos.connect("https://demosnode.discus.sh");
-            await demos.connectWallet(formattedKey);
-            this.demos = demos;
+            await this.demos.connect("https://demosnode.discus.sh");
+            await this.demos.connectWallet(formattedKey);
             console.log(`[${this.chainName}] Connected to Demos node`);
 
             // Then initialize EVM instance
